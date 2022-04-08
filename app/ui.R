@@ -108,7 +108,7 @@ ui <- fluidPage(
                #verbatimTextOutput("node_id"),
                #verbatimTextOutput("node_int"),
         ),
-        column(9,
+        column(style='border: 1px solid black', 9,
                withSpinner(
                  id = 'loader',
                  type = 1,
