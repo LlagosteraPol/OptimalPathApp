@@ -1,7 +1,7 @@
 library(shinycssloaders)
 # Define UI for data upload app ----
 ui <- fluidPage(
-  useShinyjs(),
+  shinyjs::useShinyjs(),
   
   navbarPage("Optimal Path",
     tabPanel("Data Source",
@@ -112,8 +112,8 @@ ui <- fluidPage(
                withSpinner(
                  id = 'loader',
                  type = 1,
-                 ui_element = visNetworkOutput("network",  height = "100vh"))
-               
+                 visNetwork::visNetworkOutput("network",  height = "100vh")
+               )
         )
       )
     ),# Panel Plot

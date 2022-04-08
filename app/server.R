@@ -110,7 +110,6 @@ server <- function(input, output) {
         footer = NULL
       ))
     }else{
-      toggle('loader')
       df_nodes <- read.csv(input$file_nodes$datapath,
                            header = input$header,
                            sep = input$sep)
@@ -143,53 +142,52 @@ server <- function(input, output) {
                           from = df_edges[, 'FID_1'],
                           to = df_edges[, 'FID_12'])
       
+      #visNetwork(nodes, edges) %>%
+      #visIgraph(g) %>%
       output$network <- visNetwork::renderVisNetwork({
         visNetwork(nodes, edges) %>%
-          visIgraphLayout() %>%
+          visIgraphLayout(layout = "layout.norm", layoutMatrix = as.matrix(df_nodes[, c('y3', 'x3')]), type = "full") %>%
+          visNodes(size = 15) %>%
           visEvents(selectNode = "function(nodes) {
-                      Shiny.setInputValue('current_node_id', nodes.nodes);
+                       Shiny.onInputChange('current_node_id', nodes.nodes);
                       ;}",
-                    select = "function(edges) {
-                      Shiny.setInputValue('current_edge_id', edges.edges);
-                      ;}")
+                    deselectNode = "function(nodes) {
+                       Shiny.onInputChange('current_node_id', nodes.nodes);
+                      ;}",
+                    selectEdge = "function(edges = null) {
+                      Shiny.onInputChange('current_edge_id', edges.edges);
+                      ;}",
+                    deselectEdge = "function(edges = null) {
+                      Shiny.onInputChange('current_edge_id', edges.edges);
+                      ;}") %>%
+          visInteraction(zoomView = TRUE, 
+                         multiselect = TRUE, 
+                         hover = TRUE) #, dragNodes = FALSE) 
       })
       
-      observeEvent(input$current_node_id, {
+      observeEvent(
+        input$current_node_id, {
         visNetworkProxy("network") %>%
-          visGetNodes()
+          visGetSelectedNodes()
       })
       
-      observeEvent(input$current_edge_id, {
+      observeEvent(
+        input$current_edge_id, {
         visNetworkProxy("network") %>%
-          visGetEdges()
+          visGetSelectedEdges()
       })
       
-      node_model <- eventReactive(input$current_node_id, {
-        if (!is.null(input$current_node_id)){
-          node_int = vertex_attr(g, 'intensity', input$current_node_id)
-          
-          # return all object as a list
-          list(node_id = input$current_node_id, node_intensity = node_int)
-        }
-      })
-      
-      edge_model <- eventReactive(input$current_edge_id, {
-        if (!is.null(input$current_edge_id)){
-          edge_int = edge_attr(g, 'intensity', input$current_edge_id)
-          edge_imd = edge_attr(g, 'imd', input$current_edge_id)
-          
-          # return all object as a list
-          list(edge_id = input$current_edge_id, edge_intensity = edge_int, edge_imd = edge_imd)
-        }
-      })
       
       output$node_info <- renderText({
-        paste0("<B>Id: </B>", node_model()$node_id, "<br>",
-               "<B>Intensity: </B>",  node_model()$node_intensity, "<br>")
+        paste0("<B>Id: </B>", input$current_node_id, "<br>",
+               "<B>x: </B>",  igraph::vertex_attr(g, 'xcoord', input$current_node_id), "<br>",
+               "<B>y: </B>",  igraph::vertex_attr(g, 'ycoord', input$current_node_id), "<br>",
+               "<B>Intensity: </B>",  igraph::vertex_attr(g, 'intensity', input$current_node_id), "<br><br>")
       })
       
       output$edge_info <- renderText({
         paste0("<B>Id: </B>", input$current_edge_id, "<br>",
+               "<B>Nº events: </B>", edge_attr(g, 'n_events', input$current_edge_id), "<br>",
                "<B>Intensity: </B>",  edge_attr(g, 'intensity', input$current_edge_id), "<br>",
                "<B>IMD: </B>",  edge_attr(g, 'imd', input$current_edge_id), "<br><br>")
       })
@@ -242,6 +240,7 @@ server <- function(input, output) {
       observe({
         print(input$network_selectedNodes)
       })
+      
     }
   })#observeEvent: load_net
   
@@ -291,7 +290,7 @@ server <- function(input, output) {
     net_df <- data.frame( from = df_edges[, 'FID_1'],
                           to = df_edges[, 'FID_12'],
                           imd = df_edges[, 'IMD2015'])
-    net <- graph_from_data_frame(net_df, vertices = df_nodes[, c('FID', 'x', 'y')])
+    net <- graph_from_data_frame(net_df, vertices = df_nodes[, c('FID', 'x3', 'y3')])
     
     
     adj_mtx <- as.matrix(as_adjacency_matrix(net))
