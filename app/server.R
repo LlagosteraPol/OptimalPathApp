@@ -5,33 +5,75 @@ library(shiny.router) # It is a simple router for your Shiny apps
 library(visNetwork)
 library(igraph)
 library(intensitynet)
-#source("./main.R", local=TRUE)
+
+source("../R/functions.R", local=TRUE)
 
 
-# Define server logic to read selected file ----
-server <- function(input, output) {
+server <- function(input, output, session) {
   intnet <- NULL
   output$test1 <- renderTable( matrix(1:20, nrow=4))
   
-  output$node_table <- DT::renderDataTable({
-    req(input$file_nodes)
+  
+  #-------------------------------------------------------------Read files-------------------------------------------------------------
+  df_nodes <- reactive({
+    validate(need(input$file_nodes, "Please upload a file"))
+    
     tryCatch(
       {
-        df_nodes <- read.csv(input$file_nodes$datapath,
-                             header = input$header,
-                             sep = input$sep)
+        read.csv2(input$file_nodes$datapath,
+                 header = input$header,
+                 sep = input$sep)
       },
       error = function(e) {
         # return a safeError if a parsing error occurs
         stop(safeError(e))
       }
     )
+  })
+  
+  
+  df_edges <- reactive({
+    validate(need(input$file_edges, "Please upload a file"))
     
+    tryCatch(
+      {
+        read.csv2(input$file_edges$datapath,
+                 header = input$header,
+                 sep = input$sep)
+      },
+      error = function(e) {
+        # return a safeError if a parsing error occurs
+        stop(safeError(e))
+      }
+    )
+  })
+  
+  
+  df_events <- reactive({
+    validate(need(input$file_events, "Please upload a file"))
+    
+    tryCatch(
+      {
+        read.csv2(input$file_events$datapath,
+                 header = input$header,
+                 sep = input$sep)
+      },
+      error = function(e) {
+        # return a safeError if a parsing error occurs
+        stop(safeError(e))
+      }
+    )
+  })
+  
+  
+  #-------------------------------------------------------------Show files-------------------------------------------------------------
+  output$node_table <- DT::renderDataTable({
+
     if(input$disp == "head") {
-      info <- head(df_nodes)
+      info <- head(df_nodes())
     }
     else {
-      info <- df_nodes
+      info <- df_nodes()
     }
     
     DT::datatable(info, escape=FALSE, 
@@ -41,26 +83,15 @@ server <- function(input, output) {
                     scrollX = TRUE
                   ))
   })
+  
   
   output$edge_table <- DT::renderDataTable({
-    req(input$file_edges)
-    tryCatch(
-      {
-        df_edges <- read.csv(input$file_edges$datapath,
-                             header = input$header,
-                             sep = input$sep)
-      },
-      error = function(e) {
-        # return a safeError if a parsing error occurs
-        stop(safeError(e))
-      }
-    )
     
     if(input$disp == "head") {
-      info <- head(df_edges)
+      info <- head(df_edges())
     }
     else {
-      info <- df_edges
+      info <- df_edges()
     }
     
     DT::datatable(info, escape=FALSE, 
@@ -70,26 +101,15 @@ server <- function(input, output) {
                     scrollX = TRUE
                   ))
   })
+  
   
   output$event_table <- DT::renderDataTable({
-    req(input$file_events)
-    tryCatch(
-      {
-        df_events <- read.csv(input$file_events$datapath,
-                             header = input$header,
-                             sep = input$sep)
-      },
-      error = function(e) {
-        # return a safeError if a parsing error occurs
-        stop(safeError(e))
-      }
-    )
     
     if(input$disp == "head") {
-      info <- head(df_events)
+      info <- head(df_events())
     }
     else {
-      info <- df_events
+      info <- df_events()
     }
     
     DT::datatable(info, escape=FALSE, 
@@ -100,8 +120,7 @@ server <- function(input, output) {
                   ))
   })
   
-  observeEvent(input$load_net, {
-    
+  g <- eventReactive(input$load_net, {
     if(is.null(input$file_nodes$datapath) || is.null(input$file_edges$datapath) || is.null(input$file_events$datapath)){
       showModal(modalDialog(
         title = "Warning",
@@ -109,197 +128,270 @@ server <- function(input, output) {
         easyClose = TRUE,
         footer = NULL
       ))
-    }else{
-      df_nodes <- read.csv(input$file_nodes$datapath,
-                           header = input$header,
-                           sep = input$sep)
-      
-      df_edges <- read.csv(input$file_edges$datapath,
-                           header = input$header,
-                           sep = input$sep)
-      
-      df_events <- read.csv(input$file_events$datapath,
-                            header = input$header,
-                            sep = input$sep)
-      
-      net_df <- data.frame( from = df_edges[, 'FID_1'],
-                            to = df_edges[, 'FID_12'],
-                            imd = df_edges[, 'IMD2015'])
-      net <- graph_from_data_frame(net_df, vertices = df_nodes[, c('FID', 'x', 'y')])
-      
-      
-      adj_mtx <- as.matrix(as_adjacency_matrix(net))
-      
-      intnet <- intensitynet::intensitynet(adj_mtx, df_nodes[, c('x3', 'y3')], df_events[, c('x', 'y')])
-      
-      g <- intnet$graph
-      g <- igraph::set_edge_attr(g, name ='imd', value = df_edges[, 'IMD2015'][1:914])
-      
-      nodes <- data.frame(id = df_nodes[, 'FID'],
-                          x = df_nodes[, 'x3'],
-                          y = df_nodes[, 'y3'])
-      edges <- data.frame(id = df_edges[, 'FID'],
-                          from = df_edges[, 'FID_1'],
-                          to = df_edges[, 'FID_12'])
-      
-      #visNetwork(nodes, edges) %>%
-      #visIgraph(g) %>%
-      output$network <- visNetwork::renderVisNetwork({
-        visNetwork(nodes, edges) %>%
-          visIgraphLayout(layout = "layout.norm", layoutMatrix = as.matrix(df_nodes[, c('y3', 'x3')]), type = "full") %>%
-          visNodes(size = 15) %>%
-          visEvents(selectNode = "function(nodes) {
-                       Shiny.onInputChange('current_node_id', nodes.nodes);
-                      ;}",
-                    deselectNode = "function(nodes) {
-                       Shiny.onInputChange('current_node_id', nodes.nodes);
-                      ;}",
-                    selectEdge = "function(edges = null) {
-                      Shiny.onInputChange('current_edge_id', edges.edges);
-                      ;}",
-                    deselectEdge = "function(edges = null) {
-                      Shiny.onInputChange('current_edge_id', edges.edges);
-                      ;}") %>%
-          visInteraction(zoomView = TRUE, 
-                         multiselect = TRUE, 
-                         hover = TRUE) #, dragNodes = FALSE) 
-      })
-      
-      observeEvent(
-        input$current_node_id, {
-        visNetworkProxy("network") %>%
-          visGetSelectedNodes()
-      })
-      
-      observeEvent(
-        input$current_edge_id, {
-        visNetworkProxy("network") %>%
-          visGetSelectedEdges()
-      })
-      
-      
-      output$node_info <- renderText({
-        paste0("<B>Id: </B>", input$current_node_id, "<br>",
-               "<B>x: </B>",  igraph::vertex_attr(g, 'xcoord', input$current_node_id), "<br>",
-               "<B>y: </B>",  igraph::vertex_attr(g, 'ycoord', input$current_node_id), "<br>",
-               "<B>Intensity: </B>",  igraph::vertex_attr(g, 'intensity', input$current_node_id), "<br><br>")
-      })
-      
-      output$edge_info <- renderText({
-        paste0("<B>Id: </B>", input$current_edge_id, "<br>",
-               "<B>Nº events: </B>", edge_attr(g, 'n_events', input$current_edge_id), "<br>",
-               "<B>Intensity: </B>",  edge_attr(g, 'intensity', input$current_edge_id), "<br>",
-               "<B>IMD: </B>",  edge_attr(g, 'imd', input$current_edge_id), "<br><br>")
-      })
-      
-      observe({
-        if (!is.null(input$node_display)){
-          if(input$node_display == 1){
-            nodes <- data.frame(id = paste(igraph::vertex_attr(g)$name),
-                                label = paste(igraph::vertex_attr(g)$name))
-          }else if(input$node_display == 2){
-            nodes <- data.frame(id = paste(igraph::vertex_attr(g)$name),
-                                label = paste(round(igraph::vertex_attr(g)$intensity, 4)))
-          }else{
-            nodes <- data.frame(id = paste(igraph::vertex_attr(g)$name),
-                                label = "")
-          }
-          visNetworkProxy("network") %>% visUpdateNodes(nodes)
-        }
-      })
-      
-      observe({
-        if (!is.null(input$edge_display)){
-          edge_ids <- get.edge.ids(g, as.vector(t(get.edgelist(g))))
-          
-          if(input$edge_display == 1){
-            edges <- data.frame(id = edge_ids,
-                                from = get.edgelist(g)[,1],
-                                to = get.edgelist(g)[,2],
-                                label = paste(edge_ids))
-          }else if(input$edge_display == 2){
-            edges <- data.frame(id = edge_ids,
-                                from = get.edgelist(g)[,1],
-                                to = get.edgelist(g)[,2],
-                                label = paste(round(edge_attr(g)$intensity, 4)))
-          }else if(input$edge_display == 3){
-            edges <- data.frame(id = edge_ids,
-                                from = get.edgelist(g)[,1],
-                                to = get.edgelist(g)[,2],
-                                label = paste(round(edge_attr(g)$imd, 4)))
-          }else{
-            edges <- data.frame(id = edge_ids,
-                                from = get.edgelist(g)[,1],
-                                to = get.edgelist(g)[,2],
-                                label = " ")
-          }
-          visNetworkProxy("network") %>% visUpdateEdges(edges)
-        }
-      })
-      
-      observe({
-        print(input$network_selectedNodes)
-      })
-      
     }
-  })#observeEvent: load_net
+    else {
+      if(as.integer(input$cov1_display) == 1 || as.integer(input$cov2_display) == 1){
+        showModal(modalDialog(
+          title = "Warning",
+          "Please, select two covariants to calculate its linear combination W(l_i).",
+          easyClose = TRUE,
+          footer = NULL
+        ))
+      }else if(input$cov1_display == input$cov2_display ){
+        showModal(modalDialog(
+          title = "Warning",
+          "The two covariants cannot be the same",
+          easyClose = TRUE,
+          footer = NULL
+        ))
+        
+      }else{
+        PrepareIgraph(net_data = df_edges(), 
+                         node_data = df_nodes(), 
+                         cov1 = colnames(df_edges())[as.integer(input$cov1_display)],
+                         cov2 = colnames(df_edges())[as.integer(input$cov2_display)],
+                         invert_cov1 = input$invert_cov1, 
+                         invert_cov2 = input$invert_cov2)
+      }
+    }
+  })
   
-  observeEvent(input$show_plot, {
-    # if(is.null(intnet)){
-    #   showModal(modalDialog(
-    #     title = "Warning",
-    #     "Please, load the network first.",
-    #     easyClose = TRUE,
-    #     footer = NULL
-    #   ))
-    # }else{
-    #   output$net_plot <- renderPlot({
-    #     intensitynet::PlotHeatmap(intnet)
-    #   })
-    # }
+  #-----------------------------------------------------------Network-------------------------------------------------------------
+  #visNetwork(nodes, edges) %>%
+  #visIgraph(g) %>%
+  output$network <- visNetwork::renderVisNetwork({
+    if(is.null(g())) return()
     
-    df_nodes <- read.csv(input$file_nodes$datapath,
-                         header = input$header,
-                         sep = input$sep)
+    visIgraph(g())  %>%
+      visIgraphLayout(layout = "layout.norm", layoutMatrix = cbind(df_nodes()[, 2], df_nodes()[, 3] * -1 ), type = "full") %>%
+      visNodes(size = 15) %>%
+      visEvents(selectNode = "function(nodes) {
+                   Shiny.onInputChange('current_node_id', nodes.nodes);
+                  ;}",
+                deselectNode = "function(nodes) {
+                   Shiny.onInputChange('current_node_id', nodes.nodes);
+                  ;}",
+                selectEdge = "function(edges) {
+                  Shiny.onInputChange('current_edge_id', edges.edges);
+                  ;}",
+                deselectEdge = "function(edges) {
+                  Shiny.onInputChange('current_edge_id', edges.edges);
+                  ;}") %>%
+      visInteraction(zoomView = TRUE,
+                     multiselect = TRUE,
+                     hover = TRUE) #, dragNodes = FALSE)
+  })
+
+  
+  observeEvent(input$current_node_id, {
+    visNetworkProxy("network") %>%
+      visGetSelectedNodes()
+  })
+
+  
+  observeEvent(input$current_edge_id, {
+    visNetworkProxy("network") %>%
+      visGetSelectedEdges()
+  })
+
+
+  output$node_info <- renderText({
+    if(is.null(g())) return()
     
-    df_edges <- read.csv(input$file_edges$datapath,
-                         header = input$header,
-                         sep = input$sep)
+    info_node <- paste0("<B>Id: </B>", input$current_node_id, "<br>")
+    for(element in igraph::vertex_attr_names(g())[2:length(igraph::vertex_attr_names(g()))]){
+      info_node <- paste0(info_node, "<B>", element,"</B>: ", igraph::vertex_attr(g(), element, index = input$current_node_id), "<br>")
+    }
+    info_node <- paste0(info_node, "<br>")
+
+    info_node
+  })
+
+  
+  output$edge_info <- renderText({
+    if(is.null(g())) return()
+
+    info_edge <- paste0("<B>Id: </B>", input$current_edge_id, "<br>")
+    for(element in igraph::edge_attr_names(g())[2:length(igraph::edge_attr_names(g()))-1]){
+      info_edge <- paste0(info_edge, "<B>", element,"</B>: ", igraph::edge_attr(g(), element, index = input$current_edge_id), "<br>")
+    }
+    info_edge <- paste0(info_edge, "<br>")
+
+    info_edge
+  })
+
+  
+  observe({
+    if (!is.null(input$node_display)){
+      if(input$node_display == 1){
+        nodes <- data.frame(id = paste(igraph::vertex_attr(g())$name),
+                            label = "")
+      }else if(input$node_display == 2){
+        nodes <- data.frame(id = paste(igraph::vertex_attr(g())$name),
+                            label = paste(igraph::vertex_attr(g())$name))
+      }else if(input$node_display == 3){
+        nodes <- data.frame(id = paste(igraph::vertex_attr(g())$name),
+                            label = paste0("x: ", round(igraph::vertex_attr(g())[[2]], 4), " y: ", round(igraph::vertex_attr(g())[[3]], 4)))
+      }else{
+        index <- as.numeric(input$node_display) - 2
+
+        if(is.numeric(igraph::vertex_attr(g())[[index]])){
+          node_info <- paste(round(igraph::vertex_attr(g())[[index]], 4))
+        }else{
+          index <- as.numeric(input$edge_display) - 2
+          node_info <- igraph::edge_attr(g())[[index]]
+
+          if(is.numeric(node_info)){
+            node_info <- paste(round(node_info, 4))
+          }else{
+            node_info <- paste(node_info)
+          }
+
+          nodes <- data.frame(id = paste(igraph::vertex_attr(g())$name),
+                              label = node_info
+          )
+        }
+      }
+      visNetworkProxy("network") %>% visUpdateNodes(nodes)
+    }
+  })
+
+  observe({
+    if (!is.null(input$edge_display)){
+      edge_ids <- igraph::get.edge.ids(g(), as.vector(t(get.edgelist(g()))))
+
+      if(input$edge_display == 1){
+        edges <- data.frame(id = edge_ids,
+                            from = igraph::get.edgelist(g())[,1],
+                            to = igraph::get.edgelist(g())[,2],
+                            label = " ")
+      }else if(input$edge_display == 2){
+        edges <- data.frame(id = edge_ids,
+                            from = igraph::get.edgelist(g())[,1],
+                            to = igraph::get.edgelist(g())[,2],
+                            label = paste(edge_ids))
+      }else{
+        index <- as.numeric(input$edge_display) - 2
+        edge_info <- igraph::edge_attr(g())[[index]]
+
+        if(is.numeric(edge_info)){
+          edge_info <- paste(round(edge_info, 4))
+        }else{
+          edge_info <- paste(edge_info)
+        }
+
+        edges <- data.frame(id = edge_ids,
+                            from = igraph::get.edgelist(g())[,1],
+                            to = igraph::get.edgelist(g())[,2],
+                            label = edge_info
+                            )
+      }
+      visNetworkProxy("network") %>% visUpdateEdges(edges)
+    }
+  })
+
+  observe({
+    print(input$network_selectedNodes)
+  })
+  
+  output$node_select_info <- renderUI({
+    if(is.null(g())) return()
     
-    df_events <- read.csv(input$file_events$datapath,
-                          header = input$header,
-                          sep = input$sep)
+    choices_list <- c("none" = 1, "id" = 2, "coords" = 3)
     
+    if(length(colnames(df_nodes())) > 3){
+      i = 4
+      for(element in colnames(df_nodes())[4:length(colnames(df_nodes()))]){
+        choices_list <- c(choices_list, setNames(i, element ) )
+        i <- i+1
+      }
+    }
+    selectInput(inputId = "node_display",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  output$edge_select_info <- renderUI({
+    if(is.null(g())) return()
     
-    # net <- igraph::graph_from_edgelist(edges)
-    # adj_mtx <- as.matrix(igraph::as_adjacency_matrix(net))
-    # node_coords <- data.frame(xcoord = df_nodes$x3, 
-    #                           ycoord = df_nodes$y3)
+    choices_list <- c("none" = 1, "id" = 2)
     
-    # event_coords <- data.frame(xcoord = df_events$x, 
-    #                            ycoord = df_events$y)
-    # 
-    # 
-    # intnet <- intensitynet::intensitynet(adjacency_mtx = adj_mtx, 
-    #                                      node_coords = node_coords,
-    #                                      event_data = event_coords)
+    i = 3
+    for(element in igraph::edge_attr_names(g())[1:length(igraph::edge_attr_names(g())) - 1]){
+      choices_list <- c(choices_list, setNames(i, element) )
+      i <- i+1
+    }
+    selectInput(inputId = "edge_display",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  
+  output$cov1 <- renderUI({
+    if(is.null(df_edges())) return()
     
-    #intnet <- RelateEventsToNetwork(intnet)
-    #intensitynet::PlotHeatmap(intnet)
+    choices_list <- c("none" = 1)
     
-    net_df <- data.frame( from = df_edges[, 'FID_1'],
-                          to = df_edges[, 'FID_12'],
-                          imd = df_edges[, 'IMD2015'])
-    net <- graph_from_data_frame(net_df, vertices = df_nodes[, c('FID', 'x3', 'y3')])
+    i = 3
+    for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
+      choices_list <- c(choices_list, setNames(i, element) )
+      i <- i+1
+    }
+    selectInput(inputId = "cov1_display",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  
+  output$cov2 <- renderUI({
+    if(is.null(df_edges())) return()
     
+    choices_list <- c("none" = 1)
     
-    adj_mtx <- as.matrix(as_adjacency_matrix(net))
+    i = 3
+    for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
+      choices_list <- c(choices_list, setNames(i, element) )
+      i <- i+1
+    }
+    selectInput(inputId = "cov2_display",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  
+  output$heatmap_select <- renderUI({
+    if(is.null(g())) return()
     
-    intnet <- intensitynet::intensitynet(adj_mtx, df_nodes[, c('x3', 'y3')], df_events[, c('x', 'y')])
+    choices_list <- c("none" = 1)
+    if(length(igraph::edge_attr_names(g()) > 2)){
+      i = 2
+      for(element in igraph::edge_attr_names(g())[1:length(igraph::edge_attr_names(g())) - 1]){
+        choices_list <- c(choices_list, setNames(i, element ) )
+        i <- i+1
+      }
+    }
+    selectInput(inputId = "heat_display",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  output$net_plot <- renderPlot({
+    if(is.null(g())) return()
     
+    if(input$heat_display == 1) PlotNetwork(g(), mode = 'none')
     
-    output$net_plot <- renderPlot({
-      intensitynet::PlotHeatmap(intnet)
-    })
-  })#observeEvent: show_plot
+    else PlotNetwork(g(), mode = igraph::edge_attr_names(g())[as.integer(input$heat_display) - 1])
+  }, height = function() {
+    session$clientData$output_net_plot_width
+  })
 }

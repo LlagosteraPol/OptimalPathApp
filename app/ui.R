@@ -78,48 +78,59 @@ ui <- fluidPage(
     ),#Panel DataSource
     tabPanel("Interactive Plot",
       fluidRow(
-        h4("Interactive plot")
-      ),
-      div(style = 'margin: 0px 0px 10px 0px;',
-        fluidRow(
-          actionButton("load_net", "Load Network")
+        column(3,
+               h4("Interactive plot")
+               ),
+        column(3,
+               strong("Covariant 1"),
+               uiOutput('cov1'),
+               checkboxInput("invert_cov1", "Invert", FALSE)
+        ),
+        column(3,
+               strong("Covariant 2"),
+               uiOutput('cov2'),
+               checkboxInput("invert_cov2", "Invert", FALSE)
+        ),
+        column(3,
+               div(style = 'margin: 0px 0px 20px 0px;',
+                   actionButton("load_net", "Load Network")
+               )
         )
       ),
       fluidRow(
         column(3,
-               selectInput(inputId = "node_display", 
-                           label = "Node display:",
-                           choices = c("id" = 1, 
-                                       "intensity" = 2, 
-                                       "none" = 3),
-                           selected = 1),
-               selectInput(inputId = "edge_display", 
-                           label = "Edge display", 
-                           choices = c("id" = 1, 
-                                       "intensity" = 2, 
-                                       "imd" = 3,
-                                       "none" = 4),
-                           selected = 3),
+               strong("Node display"),
+               uiOutput("node_select_info"),
+               
+               strong("Edge display"),
+               uiOutput("edge_select_info"),
+
                h3("Node Info:"),
                htmlOutput("node_info"),
+               
                h3("Edge Info:"),
                htmlOutput("edge_info")
-               #dataTableOutput("nodes_data_from_shiny"),
-               #verbatimTextOutput("node_id"),
-               #verbatimTextOutput("node_int"),
         ),
         column(style='border: 1px solid black', 9,
                withSpinner(
                  id = 'loader',
                  type = 1,
-                 visNetwork::visNetworkOutput("network",  height = "100vh")
+                 visNetwork::visNetworkOutput("network",  height = "75vh")
                )
         )
       )
     ),# Panel Plot
     tabPanel("Heatmap Plots",
-      h4("Heatmap plot"),
-      actionButton("show_plot", "Show selected plot"),
+    fluidRow(
+      # Inputs ----
+      column(width = 3,
+        h4("Heatmap plot")
+      ),
+      column(width = 3,
+             strong("Heatmap Type"),
+             uiOutput("heatmap_select")
+      )
+    ),
       plotOutput('net_plot')
     )# Panel Plot
   )#NavBar 
