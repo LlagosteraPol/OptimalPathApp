@@ -95,7 +95,11 @@ ui <- fluidPage(
                checkboxInput("invert_cov2", "Invert", FALSE)
         ),
         column(3,
-               uiOutput('weight_slider'),
+               sliderInput(inputId = "weight_prop", 
+                           label = "Weight proportion",
+                           min = 1, 
+                           max = 100, 
+                           value = 50)
         )
       ),
       fluidRow(
@@ -130,6 +134,16 @@ ui <- fluidPage(
       column(width = 3,
              strong("Heatmap Type"),
              uiOutput("heatmap_select")
+      ),
+      column(width = 3,
+             checkboxInput("show_events", "Show events", FALSE)
+      ),
+      column(width = 3,
+             sliderInput(inputId = "event_alpha", 
+                         label = "Event alpha",
+                         min = 1, 
+                         max = 100, 
+                         value = 100)
       )
     ),
       plotOutput('net_plot')

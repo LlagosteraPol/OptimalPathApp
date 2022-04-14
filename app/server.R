@@ -384,22 +384,18 @@ server <- function(input, output, session) {
   })
   
   
-  output$weight_slider <- renderUI({
-    sliderInput(inputId = "weight_prop", 
-                label = "Weight proportion",
-                min = 1, 
-                max = 100, 
-                value = 50)
-    
-  })
-  
-  
   output$net_plot <- renderPlot({
     if(is.null(g())) return()
     
-    if(input$heat_display == 1) PlotNetwork(g(), mode = 'none')
+    events <- NULL
+    if(input$show_events) events <- as.matrix(df_events())
     
-    else PlotNetwork(g(), mode = igraph::edge_attr_names(g())[as.integer(input$heat_display) - 1])
+    if(input$heat_display == 1) mode = 'none'
+    
+    else mode = igraph::edge_attr_names(g())[as.integer(input$heat_display) - 1]
+      
+    PlotNetwork(g(), mode = mode, events = events, alpha = input$event_alpha / 100)
+    
   }, height = function() {
     session$clientData$output_net_plot_width
   })
