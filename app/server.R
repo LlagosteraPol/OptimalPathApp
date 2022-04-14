@@ -150,6 +150,7 @@ server <- function(input, output, session) {
                          node_data = df_nodes(), 
                          cov1 = colnames(df_edges())[as.integer(input$cov1_display)],
                          cov2 = colnames(df_edges())[as.integer(input$cov2_display)],
+                         prop = input$weight_prop / 100,
                          invert_cov1 = input$invert_cov1, 
                          invert_cov2 = input$invert_cov2)
       }
@@ -290,9 +291,6 @@ server <- function(input, output, session) {
     }
   })
 
-  observe({
-    print(input$network_selectedNodes)
-  })
   
   output$node_select_info <- renderUI({
     if(is.null(g())) return()
@@ -385,6 +383,17 @@ server <- function(input, output, session) {
     )
   })
   
+  
+  output$weight_slider <- renderUI({
+    sliderInput(inputId = "weight_prop", 
+                label = "Weight proportion",
+                min = 1, 
+                max = 100, 
+                value = 50)
+    
+  })
+  
+  
   output$net_plot <- renderPlot({
     if(is.null(g())) return()
     
@@ -394,4 +403,7 @@ server <- function(input, output, session) {
   }, height = function() {
     session$clientData$output_net_plot_width
   })
+  
+  
+  
 }

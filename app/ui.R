@@ -79,7 +79,10 @@ ui <- fluidPage(
     tabPanel("Interactive Plot",
       fluidRow(
         column(3,
-               h4("Interactive plot")
+               h4("Interactive plot"),
+               div(style = 'margin: 0px 0px 20px 0px;',
+                   actionButton("load_net", "Load Network")
+               )
                ),
         column(3,
                strong("Covariant 1"),
@@ -92,9 +95,7 @@ ui <- fluidPage(
                checkboxInput("invert_cov2", "Invert", FALSE)
         ),
         column(3,
-               div(style = 'margin: 0px 0px 20px 0px;',
-                   actionButton("load_net", "Load Network")
-               )
+               uiOutput('weight_slider'),
         )
       ),
       fluidRow(

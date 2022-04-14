@@ -13,11 +13,14 @@ library(parallel)
 #' @param node_data two columns dataframe with the Id of the nodes and its x and y coordinates.
 #' @param cov1 select first covariant to calculate the linear combination W(l_i)
 #' @param cov2 select second covariant to calculate the linear combination W(l_i)
+#' @param prop select the proportion for the covariance linear combination, (cov1 = prop, cov2 = 1 - prop). Default 0.5.
 #' @param invert_cov1 invert covariate 1 (max(cov1) - cov1_i), default FALSE
 #' @param invert_cov2 invert covariate 2 (max(cov2) - cov2_i), default FALSE
 #' @return igraph network class object
 #' 
-PrepareIgraph <- function(net_data, node_data, cov1, cov2, invert_cov1 = FALSE, invert_cov2 = FALSE){
+PrepareIgraph <- function(net_data, node_data, cov1, cov2, prop = 0.5, invert_cov1 = FALSE, invert_cov2 = FALSE){
+  
+  if(prop > 1 || prop < 0) stop('Bad proportion Error: Proportion needs to be in the range [0, 1].')
   
   if(length(node_data) < 3){
     id <-  rep(1:nrow(net_data))
@@ -27,8 +30,8 @@ PrepareIgraph <- function(net_data, node_data, cov1, cov2, invert_cov1 = FALSE, 
   
   transformed_weights <- weighted_data(cov1 = net_data[, cov1], 
                                        cov2 = net_data[, cov2], 
-                                       a = 0.5, 
-                                       b = 0.5, 
+                                       a = prop, 
+                                       b = 1 - prop, 
                                        invert_cov1 = invert_cov1, 
                                        invert_cov2 = invert_cov2)
   
