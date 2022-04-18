@@ -103,27 +103,57 @@ ui <- fluidPage(
         )
       ),
       fluidRow(
-        column(3,
-               strong("Node display"),
-               uiOutput("node_select_info"),
-               
-               strong("Edge display"),
-               uiOutput("edge_select_info"),
-
-               h3("Node Info:"),
-               htmlOutput("node_info"),
-               
-               h3("Edge Info:"),
-               htmlOutput("edge_info")
+        column(3, 
+              
+        strong("Node display"),
+        uiOutput("node_select_info"),
+        
+        strong("Edge display"),
+        uiOutput("edge_select_info"),
+       
+        h3("Node Info:"),
+        fluidRow(style = "overflow-y:scroll; max-height: 170px",
+          htmlOutput("node_info"),
         ),
-        column(style='border: 1px solid black', 9,
-               withSpinner(
-                 id = 'loader',
-                 type = 1,
-                 visNetwork::visNetworkOutput("network",  height = "75vh")
-               )
+        h3("Edge Info:"),
+        fluidRow(style = "overflow-y:scroll; max-height: 260px",
+          htmlOutput("edge_info")
         )
-      )
+        ),
+        column(9,
+           fluidRow(style='border: 1px solid black',
+             withSpinner(
+               id = 'loader',
+               type = 1,
+               visNetwork::visNetworkOutput("network",  height = "75vh"),
+               
+             ),
+             tags$script("
+                Shiny.addCustomMessageHandler('current_node_id', function(value) {
+                Shiny.setInputValue('current_node_id', value);
+                });
+                Shiny.addCustomMessageHandler('current_edge_id', function(value) {
+                Shiny.setInputValue('current_edge_id', value);
+                });
+              ")
+           ),
+           fluidRow(
+             column(3,
+              h3('Optimal path')
+             ),
+             column(3,
+              uiOutput('weight_type'),
+             ),
+             column(4,
+              textInput(inputId = 'start_path', label = 'origin'),
+              textInput(inputId = 'end_path', label = 'destination')
+             ),
+             column(2,
+              actionButton("get_path", "calculate")
+             )
+           )
+        )
+      ),
     ),# Panel Plot
     tabPanel("Heatmap Plots",
     fluidRow(

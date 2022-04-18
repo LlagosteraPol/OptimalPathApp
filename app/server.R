@@ -10,9 +10,6 @@ source("../R/functions.R", local=TRUE)
 
 
 server <- function(input, output, session) {
-  intnet <- NULL
-  output$test1 <- renderTable( matrix(1:20, nrow=4))
-  
   
   #-------------------------------------------------------------Read files-------------------------------------------------------------
   df_nodes <- reactive({
@@ -165,18 +162,19 @@ server <- function(input, output, session) {
     
     visIgraph(g())  %>%
       visIgraphLayout(layout = "layout.norm", layoutMatrix = cbind(df_nodes()[, 2], df_nodes()[, 3] * -1 ), type = "full") %>%
-      visNodes(size = 15) %>%
+      visNodes(size = 15,  color = list(highlight = "darkgreen")) %>%
+      visEdges(color = list(highlight ="green")) %>%
       visEvents(selectNode = "function(nodes) {
-                   Shiny.onInputChange('current_node_id', nodes.nodes);
+                   Shiny.setInputValue('current_node_id', nodes.nodes);
                   ;}",
                 deselectNode = "function(nodes) {
-                   Shiny.onInputChange('current_node_id', nodes.nodes);
+                   Shiny.setInputValue('current_node_id', nodes.nodes);
                   ;}",
                 selectEdge = "function(edges) {
-                  Shiny.onInputChange('current_edge_id', edges.edges);
+                  Shiny.setInputValue('current_edge_id', edges.edges);
                   ;}",
                 deselectEdge = "function(edges) {
-                  Shiny.onInputChange('current_edge_id', edges.edges);
+                  Shiny.setInputValue('current_edge_id', edges.edges);
                   ;}") %>%
       visInteraction(zoomView = TRUE,
                      multiselect = TRUE,
@@ -194,31 +192,31 @@ server <- function(input, output, session) {
     visNetworkProxy("network") %>%
       visGetSelectedEdges()
   })
-
-
+  
+  
   output$node_info <- renderText({
-    if(is.null(g())) return()
-    
-    info_node <- paste0("<B>Id: </B>", input$current_node_id, "<br>")
-    for(element in igraph::vertex_attr_names(g())[2:length(igraph::vertex_attr_names(g()))]){
-      info_node <- paste0(info_node, "<B>", element,"</B>: ", igraph::vertex_attr(g(), element, index = input$current_node_id), "<br>")
+    info_nodes <- ""
+    for(n in input$current_node_id ){
+      info_nodes <- paste0(info_nodes, "<B>Id: </B>", n, "<br>")
+      for(element in igraph::vertex_attr_names(g())[2:length(igraph::vertex_attr_names(g()))]){
+        info_nodes <- paste0(info_nodes, "<B>", element,"</B>: ", igraph::vertex_attr(g(), element, index = n), "<br>")
+      }
+      info_nodes <- paste0(info_nodes, "<br>")
     }
-    info_node <- paste0(info_node, "<br>")
-
-    info_node
+    info_nodes
   })
-
+  
   
   output$edge_info <- renderText({
-    if(is.null(g())) return()
-
-    info_edge <- paste0("<B>Id: </B>", input$current_edge_id, "<br>")
-    for(element in igraph::edge_attr_names(g())[2:length(igraph::edge_attr_names(g()))-1]){
-      info_edge <- paste0(info_edge, "<B>", element,"</B>: ", igraph::edge_attr(g(), element, index = input$current_edge_id), "<br>")
+    info_edges <- ""
+    for(e in input$current_edge_id){
+      info_edges <- paste0(info_edges, "<B>Id: </B>", e, "<br>")
+      for(element in igraph::edge_attr_names(g())[2:length(igraph::edge_attr_names(g()))-1]){
+        info_edges <- paste0(info_edges, "<B>", element,"</B>: ", igraph::edge_attr(g(), element, index = e), "<br>")
+      }
+      info_edges <- paste0(info_edges, "<br>")
     }
-    info_edge <- paste0(info_edge, "<br>")
-
-    info_edge
+    info_edges
   })
 
   
@@ -256,6 +254,7 @@ server <- function(input, output, session) {
       visNetworkProxy("network") %>% visUpdateNodes(nodes)
     }
   })
+  
 
   observe({
     if (!is.null(input$edge_display)){
@@ -311,6 +310,7 @@ server <- function(input, output, session) {
     )
   })
   
+  
   output$edge_select_info <- renderUI({
     if(is.null(g())) return()
     
@@ -362,6 +362,45 @@ server <- function(input, output, session) {
                 choices = choices_list,
                 selected = 1
     )
+  })
+  
+  
+  output$weight_type <- renderUI({
+    if(is.null(df_edges())) return()
+    
+    choices_list <- c("none" = 1)
+    
+    i = 3
+    for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
+      choices_list <- c(choices_list, setNames(i, element) )
+      i <- i+1
+    }
+    selectInput(inputId = "path_weight",
+                label = NULL, 
+                choices = choices_list,
+                selected = 1
+    )
+  })
+  
+  
+  observeEvent(input$get_path,{
+    short_path <- igraph::shortest_paths(graph = g(), 
+                                         from = igraph::V(g())[input$start_path], 
+                                         to = igraph::V(g())[input$end_path],
+                                         weight = igraph::edge_attr(g(), 
+                                                                    colnames(df_edges())[as.numeric(input$path_weight)]),
+                                         output = 'both')
+    
+    nodes_selection <- as.character(short_path$vpath[[1]])
+    edges_selection <- as.character(short_path$epath[[1]])
+
+    visNetworkProxy("network") %>%
+      visSetSelection(nodesId = nodes_selection, 
+                      edgesId = edges_selection,
+                      highlightEdges = FALSE)
+    
+    session$sendCustomMessage("current_node_id", nodes_selection)
+    session$sendCustomMessage("current_edge_id", edges_selection)
   })
   
   
