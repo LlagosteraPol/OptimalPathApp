@@ -1,4 +1,6 @@
 library(shinycssloaders)
+library(shinydashboard)
+
 # Define UI for data upload app ----
 ui <- fluidPage(
   shinyjs::useShinyjs(),
