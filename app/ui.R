@@ -78,30 +78,63 @@ ui <- fluidPage(
     ),#Panel DataSource
     tabPanel("Interactive Plot",
       fluidRow(
-        column(3,
-               h4("Interactive plot"),
-               div(style = 'margin: 0px 0px 20px 0px;',
-                   actionButton("load_net", "Load Network")
-               )
-               ),
-        column(3,
-               strong("Covariant 1"),
-               uiOutput('cov1'),
-               checkboxInput("invert_cov1", "Invert", FALSE)
-        ),
-        column(3,
-               strong("Covariant 2"),
-               uiOutput('cov2'),
-               checkboxInput("invert_cov2", "Invert", FALSE)
-        ),
-        column(3,
-               sliderInput(inputId = "weight_prop", 
-                           label = "Weight proportion",
-                           min = 1, 
-                           max = 100, 
-                           value = 50)
+        tabBox(width = 12, height =  "15vh",
+          tabPanel("Network data",
+            div(style = "margin: 7px; 0px; 0px;",
+              fluidRow(
+                column(3,
+                       strong("Covariant 1"),
+                       uiOutput('cov1'),
+                       checkboxInput("invert_cov1", "Invert", FALSE)
+                ),
+                column(3,
+                       strong("Covariant 2"),
+                       uiOutput('cov2'),
+                       checkboxInput("invert_cov2", "Invert", FALSE)
+                ),
+                column(3,
+                       sliderInput(inputId = "weight_prop", 
+                                   label = "Weight proportion",
+                                   min = 1, 
+                                   max = 100, 
+                                   value = 50)
+                ),
+                column(3, align = "center",
+                       div( style = "margin: 18px; 0px; 0px;",
+                           actionButton("load_net", "Load Network")
+                       )
+                )
+              )
+            )
+          ),
+          tabPanel("Optimal Path",
+            div(style = "margin: 7px; 0px; 0px;",
+              fluidRow(
+                column(3,
+                       strong("Origin"),
+                       textInput(inputId = 'start_path', label = NULL)
+                       
+                ),
+                column(3,
+                       strong("Destination"),
+                       textInput(inputId = 'end_path', label = NULL)
+                ),
+                column(3,
+                       strong("Weight"),
+                       uiOutput('weight_type')
+                ),
+                column(3,  align = "center",
+                       div( style = "margin: 19px; 0px; 0px;",
+                           actionButton("get_path", "calculate")
+                       ),
+                       
+                ),
+              )
+            )
+          )
         )
       ),
+      hr(),
       fluidRow(
         column(3, 
               
@@ -136,44 +169,27 @@ ui <- fluidPage(
                 Shiny.setInputValue('current_edge_id', value);
                 });
               ")
-           ),
-           fluidRow(
-             column(3,
-              h3('Optimal path')
-             ),
-             column(3,
-              uiOutput('weight_type'),
-             ),
-             column(4,
-              textInput(inputId = 'start_path', label = 'origin'),
-              textInput(inputId = 'end_path', label = 'destination')
-             ),
-             column(2,
-              actionButton("get_path", "calculate")
-             )
            )
         )
       ),
     ),# Panel Plot
     tabPanel("Heatmap Plots",
     fluidRow(
-      # Inputs ----
       column(width = 3,
-        h4("Heatmap plot")
+        strong("Heatmap Type"),
+        uiOutput("heatmap_select")
+      ),
+      column(width = 3,  align = "center",
+        div( style = "margin: 25px; 0px; 0px;",
+          checkboxInput("show_events", "Show events", FALSE)
+        )
       ),
       column(width = 3,
-             strong("Heatmap Type"),
-             uiOutput("heatmap_select")
-      ),
-      column(width = 3,
-             checkboxInput("show_events", "Show events", FALSE)
-      ),
-      column(width = 3,
-             sliderInput(inputId = "event_alpha", 
-                         label = "Event alpha",
-                         min = 1, 
-                         max = 100, 
-                         value = 100)
+        sliderInput(inputId = "event_alpha", 
+                    label = "Event transparency",
+                    min = 1, 
+                    max = 100, 
+                    value = 100)
       )
     ),
       plotOutput('net_plot')
