@@ -145,8 +145,8 @@ server <- function(input, output, session) {
       }else{
         PrepareIgraph(net_data = df_edges(), 
                          node_data = df_nodes(), 
-                         cov1 = colnames(df_edges())[as.integer(input$cov1_display)],
-                         cov2 = colnames(df_edges())[as.integer(input$cov2_display)],
+                         cov1 = colnames(df_edges())[as.integer(input$cov1_display) + 1],
+                         cov2 = colnames(df_edges())[as.integer(input$cov2_display) + 1],
                          prop = input$weight_prop / 100,
                          invert_cov1 = input$invert_cov1, 
                          invert_cov2 = input$invert_cov2)
@@ -334,7 +334,7 @@ server <- function(input, output, session) {
     
     choices_list <- c("none" = 1)
     
-    i = 3
+    i = 2
     for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
       choices_list <- c(choices_list, setNames(i, element) )
       i <- i+1
@@ -352,7 +352,7 @@ server <- function(input, output, session) {
     
     choices_list <- c("none" = 1)
     
-    i = 3
+    i = 2
     for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
       choices_list <- c(choices_list, setNames(i, element) )
       i <- i+1
@@ -370,7 +370,7 @@ server <- function(input, output, session) {
     
     choices_list <- c("none" = 1)
     
-    i = 3
+    i = 2
     for(element in igraph::edge_attr_names(g())[1:length(igraph::edge_attr_names(g())) - 1]){
       choices_list <- c(choices_list, setNames(i, element) )
       i <- i+1
@@ -388,7 +388,7 @@ server <- function(input, output, session) {
                                          from = igraph::V(g())[input$start_path], 
                                          to = igraph::V(g())[input$end_path],
                                          weight = igraph::edge_attr(g(), 
-                                                                    colnames(df_edges())[as.numeric(input$path_weight)]),
+                                                                    igraph::edge_attr_names(g())[as.numeric(input$path_weight)-1]),
                                          output = 'both')
     
     nodes_selection <- as.character(short_path$vpath[[1]])
