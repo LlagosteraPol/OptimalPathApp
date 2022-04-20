@@ -80,7 +80,7 @@ ui <- fluidPage(
     ),#Panel DataSource
     tabPanel("Interactive Plot",
       fluidRow(
-        tabBox(width = 12, height =  "15vh",
+        tabBox(width = 12,
           tabPanel("Network data",
             div(style = "margin: 7px; 0px; 0px;",
               fluidRow(

@@ -366,12 +366,12 @@ server <- function(input, output, session) {
   
   
   output$weight_type <- renderUI({
-    if(is.null(df_edges())) return()
+    if(is.null(g())) return()
     
     choices_list <- c("none" = 1)
     
     i = 3
-    for(element in colnames(df_edges())[3:length(colnames(df_edges()))]){
+    for(element in igraph::edge_attr_names(g())[1:length(igraph::edge_attr_names(g())) - 1]){
       choices_list <- c(choices_list, setNames(i, element) )
       i <- i+1
     }
