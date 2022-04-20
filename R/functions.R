@@ -273,15 +273,9 @@ ordered_paths <- function(graph, from, to, weight){
   paths_ordered <- list()
   
   for (path in all_paths){
-    if(weight == "distance"){
-      weight_sum <- sum(E(graph, path = unlist(path))$distance)
-    }
-    else if (weight == "weight"){
-      weight_sum <- sum(E(graph, path = unlist(path))$weight)
-    }
-    else{
-      weight_sum <- sum(E(graph, path = unlist(path))$all)
-    }
+    
+    weight_sum <- sum(igraph::edge_attr(graph, weight, igraph::E(graph, path = unlist(path))))
+    
     paths_ordered[[length(paths_ordered)+1]] <- list(weight = weight_sum, path = as.numeric(unlist(as_ids(path))))
   }
   return(paths_ordered[order(sapply(paths_ordered,'[[',1))])
@@ -384,29 +378,16 @@ filter_paths <- function(graph, from, to, weight, filters, paths = NULL){
     is_forbiden <- TRUE
     filters_idx <- 1
     
+    path_weights <- igraph::edge_attr(graph, weight,  igraph::E(graph, path = unlist(path)))
+    
     for(percent in filters){
       
-      #TODO: Finish
-      # if(max(E(graph, path = unlist(path))$distance) < (max_parameter*(percent/100))){
-      #   weight_sum <- sum(E(graph, path = unlist(path))$distance)
-      #   is_forbiden <- FALSE
-      #   break
-      # }
-      
-      if(weight == 'distance'){
-        
-        if(max(E(graph, path = unlist(path))$distance) < (max_parameter*(percent/100))){
-          weight_sum <- sum(E(graph, path = unlist(path))$distance)
-          is_forbiden <- FALSE
-          break
-        }
-      }else{
-        if(max(E(graph, path = unlist(path))$weight) < (max_parameter*(percent/100))){
-          weight_sum <- sum(E(graph, path = unlist(path))$weight)
-          is_forbiden <- FALSE
-          break
-        }
+      if(max(path_weights) < (max_parameter*(percent/100))){
+        weight_sum <- sum(path_weights)
+        is_forbiden <- FALSE
+        break
       }
+      
       if(is_forbiden){
         filters_idx <- filters_idx+1
       }
@@ -433,13 +414,8 @@ filter_paths <- function(graph, from, to, weight, filters, paths = NULL){
 #' @return graph without the edges with weight equal or greater than the given filter
 #' 
 filter_graph <- function(graph, filter, weight){
-  if(weight == 'distance'){
-    max_distance  = max(E(graph)$distance)
-    return(delete.edges(graph, which(E(graph)$distance>=(max_distance*(filter/100)))))  
-  }else{
-    max_weight  = max(E(graph)$weight)
-    return(delete.edges(graph, which(E(graph)$weight>=(max_weight*(filter/100)))))    
-  }
+  max_distance  = max(igraph::edge_attr(g, weight))
+  return(delete.edges(graph, which(igraph::edge_attr(g, weight) >= (max_distance*(filter/100)))))  
 }
 
 
