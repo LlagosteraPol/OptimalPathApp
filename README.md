@@ -3,13 +3,11 @@
 ### Summary
 This application allows to interactively see network data, calculate the shortest or optimal path between two locations, and plot heatmaps of the edge attributes. The optimal path is calculated by the app using the following linear combination formula:
 
-$W(l_i)=a\frac{\Lambda(l_i)-\min(\Lambda(l))} {\max{(\Lambda(l))}-\min{(\Lambda(l))} }
-+b \frac{Z(l_i) -\min(Z(l))}{\max{(Z(l))}-\min{(Z(l))}}
-\,\,\,\, for \,\, i=1,\ldots,s$
-
-where $W(l_i)$ is the global weight related to edge $l_i$, $Z(l_i)$ is a variable related to the same edge $i$, $a+b=1$, and $\max{(\Lambda(l))}$ and $\min{\Lambda(l))}$ (say) is the maximum and the minimum value of all $\Lambda(l_i)$, which is the intensity counting measure defined for the linear segment $l_i$, $i=1,\ldots, s$. Note that this expression is not affected by the relative scale of each criterion. Then $0 \le W(l_i) \le 1$, for any $i=1,\ldots,s$. The linear combination of both factors permits to have a better control between weight types, by changing the values of the $a$ and $b$ paramenters. For instance, if we take $a=0.8$ and $b=0.2$, our path selection is mainly based on the first covariate, although variable $Z$ of the network is also taken into account.
-
 <img src="http://www.sciweavers.org/tex2img.php?eq=W%28l_i%29%3Da%5Cfrac%7B%5CLambda%28l_i%29-%5Cmin%28%5CLambda%28l%29%29%7D%20%7B%5Cmax%7B%28%5CLambda%28l%29%29%7D-%5Cmin%7B%28%5CLambda%28l%29%29%7D%20%7D%0A%2Bb%20%5Cfrac%7BZ%28l_i%29%20-%5Cmin%28Z%28l%29%29%7D%7B%5Cmax%7B%28Z%28l%29%29%7D-%5Cmin%7B%28Z%28l%29%29%7D%7D%0A%5C%2C%5C%2C%5C%2C%5C%2C%20for%20%5C%2C%5C%2C%20i%3D1%2C%5Cldots%2Cs&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="W(l_i)=a\frac{\Lambda(l_i)-\min(\Lambda(l))} {\max{(\Lambda(l))}-\min{(\Lambda(l))} }+b \frac{Z(l_i) -\min(Z(l))}{\max{(Z(l))}-\min{(Z(l))}}\,\,\,\, for \,\, i=1,\ldots,s" width="617" height="46" />
+
+where <img src="https://bit.ly/3LjDCNm" align="center" border="0" alt="W(l_i)" width="44" height="18" /> is the global weight related to edge $l_i$, $Z(l_i)$ is a variable related to the same edge $i$, $a+b=1$, and $\max{(\Lambda(l))}$ and $\min{\Lambda(l))}$ (say) is the maximum and the minimum value of all $\Lambda(l_i)$, which is the intensity counting measure defined for the linear segment $l_i$, $i=1,\ldots, s$. Note that this expression is not affected by the relative scale of each criterion. Then $0 \le W(l_i) \le 1$, for any $i=1,\ldots,s$. The linear combination of both factors permits to have a better control between weight types, by changing the values of the $a$ and $b$ paramenters. For instance, if we take $a=0.8$ and $b=0.2$, our path selection is mainly based on the first covariate, although variable $Z$ of the network is also taken into account.
+
+
 
 ### Starting the App
 First, download this repository and uncompress the files if compressed. Then, in the *'app/'* folder, run the following R instruction to start the application:
