@@ -62,7 +62,6 @@ On the left, the app gives the option to select which node and edge attributes d
  
  - *Manipulation*: We can change the form of the network by clicking and dragging any node or set of selected nodes.
 <br/>
-<br/>
 
 #### Optimal Path
 
