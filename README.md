@@ -49,7 +49,6 @@ The proportions *a*, *b* of the linear combination are selectable using the slid
 
 Finally, the button *Load Network* will calculate the linear combination and load the interactive network in the below panel.
 <br/>
-<br/>
 
 #### Interacive network UI
 On the left, the app gives the option to select which node and edge attributes display directly on the plot. The area under these selectables, will display the information about the selected nodes and edges. On the right panel the network will be displayed which list of interactions are the following:
@@ -61,7 +60,7 @@ On the left, the app gives the option to select which node and edge attributes d
  - *Selection*: We can select the nodes and edges by clicking on them. For multiple selections, we need to press and maintain the keyboard control key (Ctrl) meanwhile selecting the nodes and edges.
  
  - *Manipulation*: We can change the form of the network by clicking and dragging any node or set of selected nodes.
-<br/>
+
 #### Optimal Path
 
 After loading the network, in this tab, we can find the options to calculate the minimal path between the locations *Origin* and *Destination* depending on the given  *Weight*. Such weight must be present in the edge attributes (therefore, loaded with the edge data in the input window). Notice that 3 more fields will appear. Such fields are *T(covariant1)*, *T(covariant2)* and *W(l_i)*. The '*T()*' fields represent each covariate part of the linear combination formula and the field '*W(l_i)*' is the result of the formula.
