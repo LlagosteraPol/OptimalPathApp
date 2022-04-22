@@ -38,7 +38,7 @@ The app gives options to load properly the data by selecting if the .csv data co
 #### Loading the network
 Once the input data is loaded, the app requires to select which edge attributes are the covariates that will be used to calculate its linear combination. The lowest weight on the resulting value from the linear combination determines the optimal paths, therefore, this value is directly related to the weight of the covariates. If the higher values of a covariate represent the best paths, the app offers the option *invert* which tells the linear combination formula to treat its higher values as lowest and the lowest as higher following the formula:
 
-Z(l<sub>i</sub>)=max(T(l))-T(l<sub>i</sub>)
+Z(l<sub>i</sub>) = max(T(l)) - T(l<sub>i</sub>)
 
 where *T(l<sub>i</sub>)* is the covariate weight of the network edge *i*.
 
