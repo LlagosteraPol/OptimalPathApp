@@ -181,28 +181,19 @@ PathWeight <- function(graph, path, weight){
 #' related to them.
 #' 
 paths_info <- function(graph, from, to){
-  all_paths <- all_simple_paths(graph, from=from, to=to)
+  all_paths <- all_simple_paths(graph, from = from, to = to)
   
   ipaths <- list()
   
   for (path in all_paths){
     
-    distance_sum <- sum(E(graph, path = unlist(path))$distance)
+    tmp_lst <- list(from = from, to=to)
+    tmp_lst <- c(tmp_lst, path = list(as.numeric(unlist(as_ids(path)))))
     
-    weight_sum <- sum(E(graph, path = unlist(path))$weight)
-    
-    t_weight_sum <- sum(E(graph, path = unlist(path))$t_weight)
-    
-    t_distance_sum <- sum(E(graph, path = unlist(path))$t_distance)
-    
-    all_sum <- sum(E(graph, path = unlist(path))$all)
-    
-    ipaths[[length(ipaths)+1]] <- list(from = from, to=to, path = as.numeric(unlist(as_ids(path))), 
-                                       distance = distance_sum, 
-                                       weight = weight_sum,
-                                       t_distance = t_distance_sum,
-                                       t_weight = t_weight_sum,
-                                       all = all_sum) 
+    for(attribute in igraph::edge_attr_names(graph)){
+      tmp_lst[[attribute]] <- sum( igraph::edge_attr( graph, attribute,  igraph::E( graph, path = unlist(path) ) ))
+    }
+    ipaths[[length(ipaths)+1]] <- tmp_lst
   }
   return(ipaths)
 }
@@ -222,38 +213,17 @@ rate_paths <- function(graph, from, to){
   if (length(ipaths) == 0){
     return(ipaths)
   }
+  attr_names <- names(ipaths[[1]])
   
-  # distance order
-  ipaths <- ipaths[order(sapply(ipaths,'[[',4))]
-  for(i in 1:length(ipaths)){
-    #ipaths[[i]] <- append(ipaths[[i]], list(n_distance=i))
-    ipaths[[i]] <- c(ipaths[[i]], n_distance=i)
+  for(name_idx in 4:length(attr_names)){
+    if(name_idx != 'id'){
+      ipaths <- ipaths[order(sapply(ipaths,'[[',name_idx))]
+      for(i in 1:length(ipaths)){
+        #ipaths[[i]] <- append(ipaths[[i]], list(n_distance=i))
+        ipaths[[i]][[paste0('n_', attr_names[name_idx])]] <- i
+      }
+    }
   }
-  
-  #accident intensity order
-  ipaths <- ipaths[order(sapply(ipaths,'[[',5))]
-  for(i in 1:length(ipaths)){
-    ipaths[[i]] <- c(ipaths[[i]], n_weight=i)
-  }
-  
-  #transformed distance order
-  ipaths <- ipaths[order(sapply(ipaths,'[[',6))]
-  for(i in 1:length(ipaths)){
-    ipaths[[i]] <- c(ipaths[[i]], n_t_distance=i)
-  }
-  
-  #transformed accident intensity order
-  ipaths <- ipaths[order(sapply(ipaths,'[[',7))]
-  for(i in 1:length(ipaths)){
-    ipaths[[i]] <- c(ipaths[[i]], n_t_weight=i)
-  }
-  
-  #both transformed accident + distance with ponderation order
-  ipaths <- ipaths[order(sapply(ipaths,'[[',8))]
-  for(i in 1:length(ipaths)){
-    ipaths[[i]] <- c(ipaths[[i]], n_t_all=i)
-  }
-  
   return(ipaths)
 }
 
