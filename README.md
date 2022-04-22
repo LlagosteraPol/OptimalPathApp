@@ -3,7 +3,7 @@
 ### Summary
 This application allows to interactively see network data, calculate the shortest or optimal path between two locations, and plot heatmaps of the edge attributes. The optimal path is calculated by the app using the following linear combination formula:
 
-<img src="https://bit.ly/3vBZ9dF" align="center" border="0" alt="W(l_i)=a\frac{\Lambda(l_i)-\min(\Lambda(l))} {\max{(\Lambda(l))}-\min{(\Lambda(l))} }+b \frac{Z(l_i) -\min(Z(l))}{\max{(Z(l))}-\min{(Z(l))}}\,\,\,\, for \,\, i=1,\ldots,s" width="617" height="46" />
+<img src="comb_linear.jpg"/>
 
 where *W(l<sub>i</sub>)* is the global weight related to edge *l<sub>i</sub>*, *Z(l<sub>i</sub>)* is a variable related to the same edge *i*, *a+b = 1*, and *max(λ(l))* and *min(λ(l))* (say) is the maximum and the minimum value of all *λ(l<sub>i</sub>)*, which is the intensity counting measure defined for the linear segment *l<sub>i</sub>*, *i = 1, ..., s*. Note that this expression is not affected by the relative scale of each criterion. Then *0 <= W(l<sub>i</sub>) <= 1*, for any *i = 1, ..., s*. The linear combination of both factors permits to have a better control between weight types, by changing the values of the *a* and *b* paramenters. For instance, if we take *a = 0.8* and *b = 0.2*, our path selection is mainly based on the first covariate, although variable *Z* of the network is also taken into account.
 
