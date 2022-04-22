@@ -48,8 +48,8 @@ where $T(l_i)$ is the covariate weight of the network edge $i$.
 The proportions *a*, *b* of the linear combination are selectable using the slider under the *Weight proportion* section. The number (blue part) represents the proportion *a*, the rest *b* (*b* = 100 - *a*). Notice that the proportion is in %, in the linear combination formula will automatically divide the proportions by 100 (% / 100).
 
 Finally, the button *Load Network* will calculate the linear combination and load the interactive network in the below panel.
-\
-\
+<br/>
+<br/>
 
 #### Interacive network UI
 On the left, the app gives the option to select which node and edge attributes display directly on the plot. The area under these selectables, will display the information about the selected nodes and edges. On the right panel the network will be displayed which list of interactions are the following:
@@ -61,8 +61,8 @@ On the left, the app gives the option to select which node and edge attributes d
  - *Selection*: We can select the nodes and edges by clicking on them. For multiple selections, we need to press and maintain the keyboard control key (Ctrl) meanwhile selecting the nodes and edges.
  
  - *Manipulation*: We can change the form of the network by clicking and dragging any node or set of selected nodes.
-\
-\
+<br/>
+<br/>
 
 #### Optimal Path
 
