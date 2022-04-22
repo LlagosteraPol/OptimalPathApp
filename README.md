@@ -62,7 +62,6 @@ On the left, the app gives the option to select which node and edge attributes d
  
  - *Manipulation*: We can change the form of the network by clicking and dragging any node or set of selected nodes.
 <br/>
-
 #### Optimal Path
 
 After loading the network, in this tab, we can find the options to calculate the minimal path between the locations *Origin* and *Destination* depending on the given  *Weight*. Such weight must be present in the edge attributes (therefore, loaded with the edge data in the input window). Notice that 3 more fields will appear. Such fields are *T(covariant1)*, *T(covariant2)* and *W(l_i)*. The '*T()*' fields represent each covariate part of the linear combination formula and the field '*W(l_i)*' is the result of the formula.
